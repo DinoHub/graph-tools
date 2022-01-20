@@ -1,6 +1,15 @@
 import json, os
 from clearml import Task, StorageManager, Dataset
 
+# import argparse
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--n_components', help='number of components')
+# parser.add_argument('--n_neighbour', help='number of neighbour documents in cluster')
+# parser.add_argument('--min_distance', help='minimum distance')
+# parser.add_argument('--min_samples', help='minimum cluster samples')
+# parser.add_argument('--min_cluster_size', help='minimum cluster size')
+# args = parser.parse_args()
+
 remote_path = "s3://experiment-logging"
 task = Task.init(project_name='topic-cluster', task_name='graph-clustering-HDBScan',
                  output_uri=os.path.join(remote_path, "storage"))
@@ -14,10 +23,10 @@ import numpy as np
 from cuml.manifold.umap import UMAP as cumlUMAP
 from cuml.cluster import HDBSCAN
 
-
 class Clustering:
 
-    def __init__(self,er_emb_path:str, doc_emb_path:str):
+    def __init__(self,er_emb_path:str, doc_emb_path:str, config):
+        self.config=config
         self.er_emb_path = er_emb_path
         self.doc_emb_path = doc_emb_path
 
@@ -39,8 +48,8 @@ class Clustering:
 
     def umap_hdfs(self,doc_emb):
         id_list,doc_arrays = self.numpy_convert(doc_emb)
-        g_embedding = cumlUMAP(n_neighbors=30,min_dist=0.0,n_components=2,init="spectral").fit_transform(doc_arrays)
-        model = HDBSCAN(min_samples=10,min_cluster_size=100)
+        g_embedding = cumlUMAP(n_neighbors=self.config.n_neighbours, min_dist=self.config.min_distance, n_components=self.config.n_components, init="spectral").fit_transform(doc_arrays)
+        model = HDBSCAN(min_samples=self.config.min_samples,min_cluster_size=self.config.min_cluster_size)
         labels = model.fit_predict(g_embedding)
         cluster_df = pd.DataFrame()
         cluster_df['id'] = id_list
@@ -61,16 +70,19 @@ class Clustering:
             temp_dict = {"id_list":temp_ids, "centroid":temp_centroids}
             full_dict[str(label)] = temp_dict
         return full_dict
-    
 
-if __name__ == '__main__':
+
+import hydra
+
+@hydra.main(config_path="./configs", config_name="main")
+def run_cluster(cfg) -> None:
     dataset_obj = Dataset.get(dataset_project="datasets/gdelt", dataset_name="gdelt_openke_format_w_extras", only_published=True)
     dataset_path = dataset_obj.get_local_copy()
 
     doc_emb_path = "s3://experiment-logging/storage/gdelt-embeddings/graph-clustering-2020.43890e3a8a484997bd0e26bfd9568595/artifacts/temporal_list_by_idx/temporal_list_by_idx.pkl"
     entity_embedding_path = "s3://experiment-logging/storage/gdelt-embeddings/openke-graph-training.3ed8b6262cd34d52b092039d0ee1d374/artifacts/transe.ckpt/transe.ckpt"
 
-    cluster_object = Clustering(er_emb_path=entity_embedding_path, doc_emb_path=doc_emb_path)
+    cluster_object = Clustering(er_emb_path=entity_embedding_path, doc_emb_path=doc_emb_path, config=cfg)
     er_emb, doc_emb = cluster_object.load_data()
     output_dict = cluster_object.output_cluster_dict(doc_emb)
 
@@ -78,3 +90,6 @@ if __name__ == '__main__':
         json.dump(output_dict, fp)
     task.upload_artifact("cluster_data.json", artifact_object='./cluster_data.json')
 
+
+if __name__ == '__main__':
+    run_cluster()
