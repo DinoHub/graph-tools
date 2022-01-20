@@ -11,10 +11,11 @@ from clearml import Task, StorageManager, Dataset
 # args = parser.parse_args()
 
 remote_path = "s3://experiment-logging"
+Task.add_requirements("hydra-core")
 task = Task.init(project_name='topic-cluster', task_name='graph-clustering-HDBScan',
                  output_uri=os.path.join(remote_path, "storage"))
 task.set_base_docker("rapidsai/rapidsai-dev:21.10-cuda11.0-devel-ubuntu18.04-py3.8")
-task.execute_remotely(queue_name="compute", exit_process=True)
+task.execute_remotely(queue_name="compute2", exit_process=True)
 
 import torch
 import pickle
