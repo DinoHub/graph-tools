@@ -1,6 +1,14 @@
+import json, os
+from clearml import Task, StorageManager, Dataset
+
+remote_path = "s3://experiment-logging"
+task = Task.init(project_name='topic-cluster', task_name='graph-clustering-HDBScan',
+                 output_uri=os.path.join(remote_path, "storage"))
+task.set_base_docker("rapidsai/rapidsai-dev:21.10-cuda11.0-devel-ubuntu18.04-py3.8")
+task.execute_remotely(queue_name="compute", exit_process=True)
+
 import torch
 import pickle
-import json
 import pandas as pd
 import numpy as np
 from cuml.manifold.umap import UMAP as cumlUMAP
@@ -9,13 +17,13 @@ from cuml.cluster import HDBSCAN
 
 class Clustering:
 
-    def __init__(self,er_emb_path,doc_emb_path):
+    def __init__(self,er_emb_path:str, doc_emb_path:str):
         self.er_emb_path = er_emb_path
         self.doc_emb_path = doc_emb_path
 
     def load_data(self):
-        er_emb = torch.load(self.er_emb_path) 
-        doc_emb = pickle.load(open(self.doc_emb_path,'rb')) 
+        er_emb = torch.load(StorageManager.get_local_copy(self.er_emb_path))
+        doc_emb = pickle.load(open(StorageManager.get_local_copy(self.doc_emb_path),'rb')) 
         return er_emb, doc_emb
 
     def numpy_convert(self,doc_emb):
@@ -56,8 +64,17 @@ class Clustering:
     
 
 if __name__ == '__main__':
-    cluster_object = Clustering("data/transe.ckpt","data/temporal_list_by_idx.pkl")
+    dataset_obj = Dataset.get(dataset_project="datasets/gdelt", dataset_name="gdelt_openke_format_w_extras", only_published=True)
+    dataset_path = dataset_obj.get_local_copy()
+
+    doc_emb_path = "s3://experiment-logging/storage/gdelt-embeddings/graph-clustering-2020.43890e3a8a484997bd0e26bfd9568595/artifacts/temporal_list_by_idx/temporal_list_by_idx.pkl"
+    entity_embedding_path = "s3://experiment-logging/storage/gdelt-embeddings/openke-graph-training.3ed8b6262cd34d52b092039d0ee1d374/artifacts/transe.ckpt/transe.ckpt"
+
+    cluster_object = Clustering(er_emb_path=entity_embedding_path, doc_emb_path=doc_emb_path)
     er_emb, doc_emb = cluster_object.load_data()
     output_dict = cluster_object.output_cluster_dict(doc_emb)
-    with open('data/cluster_data.json', 'w') as fp:
+
+    with open('./cluster_data.json', 'w') as fp:
         json.dump(output_dict, fp)
+    task.upload_artifact("cluster_data.json", artifact_object='./cluster_data.json')
+
