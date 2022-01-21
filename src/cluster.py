@@ -83,7 +83,7 @@ def run_cluster(cfg) -> None:
     doc_emb_path = "s3://experiment-logging/storage/gdelt-embeddings/graph-clustering-2020.43890e3a8a484997bd0e26bfd9568595/artifacts/temporal_list_by_idx/temporal_list_by_idx.pkl"
     entity_embedding_path = "s3://experiment-logging/storage/gdelt-embeddings/openke-graph-training.3ed8b6262cd34d52b092039d0ee1d374/artifacts/transe.ckpt/transe.ckpt"
 
-    cluster_object = Clustering(er_emb_path=entity_embedding_path, doc_emb_path=doc_emb_path, config=cfg)
+    cluster_object = Clustering(er_emb_path=entity_embedding_path, doc_emb_path=doc_emb_path, config=cfg.sampling)
     er_emb, doc_emb = cluster_object.load_data()
     output_dict = cluster_object.output_cluster_dict(doc_emb)
 
