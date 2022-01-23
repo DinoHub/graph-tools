@@ -1,0 +1,8 @@
+main:
+  n_components: 2
+  n_neighbours: 30
+  min_distance: 0.0
+  min_samples: 10
+  min_cluster_size: 100
+  entity_embedding_path: s3://experiment-logging/storage/gdelt-embeddings/openke-graph-training.3ed8b6262cd34d52b092039d0ee1d374/artifacts/transe.ckpt/transe.ckpt
+  doc_emb_path: s3://experiment-logging/storage/gdelt-embeddings/combine-graph-document-embeddings.ed6a3f66d3f14499916b568e7aadf974/artifacts/document-embeddings-2021/total_document_embeds.pt

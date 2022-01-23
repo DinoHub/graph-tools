@@ -37,21 +37,29 @@ class Clustering:
         doc_emb = torch.load(StorageManager.get_local_copy(self.doc_emb_path)) 
         return er_emb, doc_emb
 
+    # def numpy_convert(self,doc_emb):
+    #     id_list = []
+    #     emb_list = []
+    #     for doc_dict in doc_emb:
+    #         id_list = id_list + list(doc_dict.keys())
+    #         for doc in doc_dict.keys():
+    #             emb_list.append(doc_dict[doc].detach().numpy())
+    #         doc_arrays = np.array(emb_list)
+    #     print(len(id_list))
+    #     return id_list, doc_arrays
+
     def numpy_convert(self,doc_emb):
-        id_list = []
-        emb_list = []
-        for doc_dict in doc_emb:
-            id_list = id_list + list(doc_dict.keys())
-            for doc in doc_dict.keys():
-                emb_list.append(doc_dict[doc].detach().numpy())
-            doc_arrays = np.array(emb_list)
-        print(len(id_list))
+        id_list = [key for key, _ in doc_emb.items()]
+        doc_arrays = np.array([value.detach().numpy() for _, value in doc_emb.items()])
         return id_list, doc_arrays
 
     def umap_hdfs(self,doc_emb):
+        print("umap reduction...")
         id_list,doc_arrays = self.numpy_convert(doc_emb)
+        print("doc array size: ", doc_arrays.shape)
         g_embedding = cumlUMAP(n_neighbors=self.config.n_neighbours, min_dist=self.config.min_distance, n_components=self.config.n_components, init="spectral").fit_transform(doc_arrays)
         model = HDBSCAN(min_samples=self.config.min_samples,min_cluster_size=self.config.min_cluster_size)
+        print("clustering...")
         labels = model.fit_predict(g_embedding)
         cluster_df = pd.DataFrame()
         cluster_df['id'] = id_list
@@ -82,10 +90,7 @@ def run_cluster(cfg) -> None:
     dataset_path = dataset_obj.get_local_copy()
 
     doc_emb_path = cfg.main.doc_emb_path
-    entity_embedding_path = cfg.entity_embedding_path
-    
-    # doc_emb_path = "s3://experiment-logging/storage/gdelt-embeddings/graph-clustering-2020.43890e3a8a484997bd0e26bfd9568595/artifacts/temporal_list_by_idx/temporal_list_by_idx.pkl"
-    # entity_embedding_path = "s3://experiment-logging/storage/gdelt-embeddings/openke-graph-training.3ed8b6262cd34d52b092039d0ee1d374/artifacts/transe.ckpt/transe.ckpt"
+    entity_embedding_path = cfg.main.entity_embedding_path
 
     cluster_object = Clustering(er_emb_path=entity_embedding_path, doc_emb_path=doc_emb_path, config=cfg.main)
     er_emb, doc_emb = cluster_object.load_data()
