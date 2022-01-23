@@ -1,0 +1,4 @@
+scikit-learn
+tqdm
+torch
+hydra-core==1.1
