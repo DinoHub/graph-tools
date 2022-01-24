@@ -11,7 +11,6 @@ from clearml import Task, StorageManager, Dataset
 # args = parser.parse_args()
 
 remote_path = "s3://experiment-logging"
-Task.add_requirements("hydra-core")
 task = Task.init(project_name='topic-cluster', task_name='graph-clustering-HDBScan',
                  output_uri=os.path.join(remote_path, "storage"))
 task.set_base_docker("rapidsai/rapidsai-dev:21.10-cuda11.0-devel-ubuntu18.04-py3.8")
@@ -37,21 +36,21 @@ class Clustering:
         doc_emb = torch.load(StorageManager.get_local_copy(self.doc_emb_path)) 
         return er_emb, doc_emb
 
-    # def numpy_convert(self,doc_emb):
-    #     id_list = []
-    #     emb_list = []
-    #     for doc_dict in doc_emb:
-    #         id_list = id_list + list(doc_dict.keys())
-    #         for doc in doc_dict.keys():
-    #             emb_list.append(doc_dict[doc].detach().numpy())
-    #         doc_arrays = np.array(emb_list)
-    #     print(len(id_list))
-    #     return id_list, doc_arrays
-
     def numpy_convert(self,doc_emb):
-        id_list = [key for key, _ in doc_emb.items()]
-        doc_arrays = np.array([value.detach().numpy() for _, value in doc_emb.items()])
+        id_list = []
+        emb_list = []
+        for doc_dict in doc_emb:
+            id_list = id_list + list(doc_dict.keys())
+            for doc in doc_dict.keys():
+                emb_list.append(doc_dict[doc].detach().numpy())
+            doc_arrays = np.array(emb_list)
+        print(len(id_list))
         return id_list, doc_arrays
+
+    # def numpy_convert(self,doc_emb):
+    #     id_list = [key for key, _ in doc_emb.items()]
+    #     doc_arrays = np.array([value.detach().numpy() for _, value in doc_emb.items()])
+    #     return id_list, doc_arrays
 
     def umap_hdfs(self,doc_emb):
         print("umap reduction...")
@@ -62,16 +61,11 @@ class Clustering:
             min_samples=self.config.min_samples, 
             min_cluster_size=self.config.min_cluster_size, 
             max_cluster_size=self.config.max_cluster_size, 
-            cluster_selection_epsilon=self.config.epsilon, 
-            alpha=self.config.alpha, 
+            cluster_selection_method=self.config.cluster_selection_method,
+            cluster_selection_epsilon=self.config.cluster_selection_epsilon,
             metric=self.config.metric,
+            alpha=self.config.alpha,
             p=self.config.p,
-            cluster_selection_method=self.config.cluster_selection_method,
-            cluster_selection_epsilon=self.config.cluster_selection_epsilon
-            metric=self.config.euclidean
-            alpha=self.config.alpha
-            p=self.config.p
-            cluster_selection_method=self.config.cluster_selection_method,
             allow_single_cluster=self.config.allow_single_cluster,
             gen_min_span_tree=self.config.gen_min_span_tree            
             )
