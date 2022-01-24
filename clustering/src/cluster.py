@@ -96,7 +96,7 @@ import hydra
 
 @hydra.main(config_path="../configs", config_name="main")
 def run_cluster(cfg) -> None:
-    task.connect(cfg)
+    task.connect(cfg.main)
     dataset_obj = Dataset.get(dataset_project="datasets/gdelt", dataset_name="gdelt_openke_format_w_extras", only_published=True)
     dataset_path = dataset_obj.get_local_copy()
 

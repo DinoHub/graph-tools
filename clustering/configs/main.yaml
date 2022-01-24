@@ -3,8 +3,8 @@ main:
     n_neighbours: 30
     min_distance: 0.0
     min_samples: 10
-    min_cluster_size: 10
-    max_cluster_size: 100
+    min_cluster_size: 20
+    max_cluster_size: 200
     cluster_selection_epsilon: 0.0
     metric: euclidean
     alpha: 1.0
