@@ -58,7 +58,23 @@ class Clustering:
         id_list,doc_arrays = self.numpy_convert(doc_emb)
         print("doc array size: ", doc_arrays.shape)
         g_embedding = cumlUMAP(n_neighbors=self.config.n_neighbours, min_dist=self.config.min_distance, n_components=self.config.n_components, init="spectral").fit_transform(doc_arrays)
-        model = HDBSCAN(min_samples=self.config.min_samples,min_cluster_size=self.config.min_cluster_size)
+        model = HDBSCAN(
+            min_samples=self.config.min_samples, 
+            min_cluster_size=self.config.min_cluster_size, 
+            max_cluster_size=self.config.max_cluster_size, 
+            cluster_selection_epsilon=self.config.epsilon, 
+            alpha=self.config.alpha, 
+            metric=self.config.metric,
+            p=self.config.p,
+            cluster_selection_method=self.config.cluster_selection_method,
+            cluster_selection_epsilon=self.config.cluster_selection_epsilon
+            metric=self.config.euclidean
+            alpha=self.config.alpha
+            p=self.config.p
+            cluster_selection_method=self.config.cluster_selection_method,
+            allow_single_cluster=self.config.allow_single_cluster,
+            gen_min_span_tree=self.config.gen_min_span_tree            
+            )
         print("clustering...")
         labels = model.fit_predict(g_embedding)
         cluster_df = pd.DataFrame()
