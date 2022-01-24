@@ -32,8 +32,8 @@ class Clustering:
 
     def load_data(self):
         er_emb = torch.load(StorageManager.get_local_copy(self.er_emb_path))
-        #doc_emb = pickle.load(open(StorageManager.get_local_copy(self.doc_emb_path),'rb')) 
-        doc_emb = torch.load(StorageManager.get_local_copy(self.doc_emb_path)) 
+        doc_emb = pickle.load(open(StorageManager.get_local_copy(self.doc_emb_path),'rb')) 
+        #doc_emb = torch.load(StorageManager.get_local_copy(self.doc_emb_path)) 
         return er_emb, doc_emb
 
     def numpy_convert(self,doc_emb):
@@ -96,6 +96,7 @@ import hydra
 
 @hydra.main(config_path="../configs", config_name="main")
 def run_cluster(cfg) -> None:
+    task.connect(cfg)
     dataset_obj = Dataset.get(dataset_project="datasets/gdelt", dataset_name="gdelt_openke_format_w_extras", only_published=True)
     dataset_path = dataset_obj.get_local_copy()
 
