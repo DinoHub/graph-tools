@@ -4,8 +4,13 @@ main:
     min_distance: 0.0
     min_samples: 10
 <<<<<<< HEAD
+<<<<<<< HEAD
     min_cluster_size: 10
     max_cluster_size: 50
+=======
+    min_cluster_size: 20
+    max_cluster_size: 200
+>>>>>>> dbc44a0d0a8131a53fdd1d62f5479129ba19081f
 =======
     min_cluster_size: 20
     max_cluster_size: 200
