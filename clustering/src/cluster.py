@@ -11,10 +11,6 @@ from clearml import Task, StorageManager, Dataset
 # args = parser.parse_args()
 
 remote_path = "s3://experiment-logging"
-<<<<<<< HEAD
-#Task.add_requirements("hydra-core")
-=======
->>>>>>> dbc44a0d0a8131a53fdd1d62f5479129ba19081f
 task = Task.init(project_name='topic-cluster', task_name='graph-clustering-HDBScan',
                  output_uri=os.path.join(remote_path, "storage"))
 task.set_base_docker("rapidsai/rapidsai-dev:21.10-cuda11.0-devel-ubuntu18.04-py3.8")
