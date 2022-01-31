@@ -32,11 +32,12 @@ new_df = add_annotations(train_data, annotations)
 new_df.to_csv("{}/train2id.txt".format(dataset_path), sep="\t", index=None)
 read_file(".", "anno2id.txt").to_csv("{}/cluster2id.txt".format(dataset_path), sep="\t", index=None)
 
-new_dataset = Dataset.create(dataset_project='datasets/gdelt', dataset_name='raw_gdelt_2021_w_document_cluster_ids', parent_datasets=[dataset_obj.id])
+new_dataset = Dataset.create(dataset_project='datasets/gdelt', dataset_name='raw_gdelt_2020_w_document_cluster_ids', parent_datasets=[dataset_obj.id])
 #new_dataset.add_files(["{}/cluster2id".format(dataset_path)])
 new_dataset.sync_folder(local_path="./data")
 new_dataset.upload()
 new_dataset.finalize()
 new_dataset.publish()
+
 
 
